@@ -1,6 +1,7 @@
 name: Deploy Grafana Dashboard
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'grafana/dashboards/**'
