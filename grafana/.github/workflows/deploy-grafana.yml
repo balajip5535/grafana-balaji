@@ -1,0 +1,29 @@
+name: Deploy Grafana Dashboard
+
+on:
+  push:
+    paths:
+      - 'grafana/dashboards/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Copy Dashboards
+        run: |
+          scp -r grafana/dashboards/*.json ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/etc/grafana/provisioning/dashboards/
+
+      - name: Restart Grafana
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo systemctl restart grafana-server"
